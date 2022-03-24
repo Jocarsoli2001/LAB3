@@ -1,3 +1,11 @@
+/*
+ * 
+ * José Carlo Santizo Olivet
+ * Carné 20185
+ * Laboratorio 3 - Electrónica digital 2
+ * 
+ */
+
 //-------------------Definición de pines-------------------
 
 // Botones de inicio/reinicio de carrera
@@ -37,15 +45,18 @@ int Estado_START = 0;
 int Estado_J1 = 0;
 int Estado_J2 = 0;
 int Estado_RESET = 0;
+int Estado_PORTA = 0;
+int Estado_PORTB = 0;
 
 int Bandera_inicio = 0;
 int PORTA = 0;
 int PORTB = 0;
-int presionado = 0;
-  
+int presionado_J1;
+int presionado_J2;
+
+//------------------Configuración---------------------------  
 void setup() {
 
-  Serial.begin(9600);
   // Declaraciones de entradas y salidas
   pinMode(START, INPUT_PULLUP);                             // Botón para start como INPUT
   pinMode(RESET, INPUT_PULLUP);                             // Botón para stop como INPUT
@@ -78,6 +89,7 @@ void setup() {
   
 }
 
+//-----------------------Main Loop---------------------------
 void loop() {
   // Código Principal
 
@@ -87,6 +99,9 @@ void loop() {
 
   Estado_J1 = digitalRead(J1);                              // Leer pin para botón de J1
   Estado_J2 = digitalRead(J2);                              // Leer pin para botón de J2
+
+  Estado_PORTA = digitalRead(PORTA_7);
+  Estado_PORTB = digitalRead(PORTB_7);
 
   // Semáforo si se presiona botón de START
   if(Estado_START == HIGH && Bandera_inicio == 0 && Estado_RESET == LOW){      // Si se presiona el botón de START
@@ -130,36 +145,54 @@ void loop() {
     PORTB = 0;
   }
 
-  if(Bandera_inicio == 1){
-      if(Estado_J1 == LOW)                            //Pregunta si el pulsador está presionado
-      {
-        presionado = 1;                                     //La variable cambia de valor
-      }
-      if (Estado_J1 == LOW && presionado == 1)
-      {
-        Serial.println("J1");
-        PORTA++;
-        Tabla_puertoA(PORTA);
-        delay(500);
-      }
+  if(Bandera_inicio == 1){                                  // Si el semáforo finalizó la cuenta regresiva, entonces:
 
-      if(Estado_J2 == LOW)                            //Pregunta si el pulsador está presionado
-      {
-        presionado = 1;                                     //La variable cambia de valor
-      }
-      if (Estado_J2 == LOW && presionado == 1)
-      {
-        Serial.println("J2");
-        PORTB++;
-        Tabla_puertoB(PORTB);
-        delay(500);
-      }
+    // Control de botones para Carrera
+    if(Estado_J1 == LOW)                                    // Observar si J1 está presionado
+    {
+      presionado_J1 = 1;                                    // Cambiar estado de variable J1
+    }
+    if (Estado_J1 == HIGH && presionado_J1 == 1)            // Detectar cuando el botón J1 se soltó
+    {
+      PORTA++;                                              // Incrementar primer puerto
+      Tabla_puertoA(PORTA);                                 // Pasar por tabla para indicar el pin a prender en TIVA C
+      presionado_J1 = 0;                                    // Cambiar variable presionado_J1 como antirebote
+    }
+
+    if(Estado_J2 == LOW)                                    // Observar si J2 está presionado
+    {
+      presionado_J2 = 1;                                    // Cambiar estado de variable J2
+    }
+    if (Estado_J2 == HIGH && presionado_J2 == 1)            // Detectar cuando el botón J2 se soltó
+    {
+      PORTB++;                                              // Incrementar segundo puerto                                        
+      Tabla_puertoB(PORTB);                                 // Pasar por tabla para indicar el pin a prender en TIVA C
+      presionado_J2 = 0;                                    // Cambiar variable presionado_J2 como antirebote
+    }
+
+
+    // Control de ganadores de carrera
+    if(Estado_PORTA == HIGH && Estado_PORTB == LOW){        // Si el jugador 1 llega a la meta primero, LED RGB = blanco
+      digitalWrite(LED_rojo, HIGH);                         // Prender LED_rojo
+      digitalWrite(LED_verde, HIGH);                        // Prender LED_verde
+      digitalWrite(LED_azul, HIGH);                         // Prender LED_azul
+      Bandera_inicio = 0;
+    }
+    else if(Estado_PORTA == LOW && Estado_PORTB == HIGH){   // Si el jugador 2 llega a la meta primero, LED RGB = morado
+      digitalWrite(LED_rojo, HIGH);                         // Apagar LED_rojo
+      digitalWrite(LED_verde, LOW);                         // Prender LED_verde
+      digitalWrite(LED_azul, HIGH);                         // Prender LED_azul
+      Bandera_inicio = 0;
+    }
+      
   }
   
   
 }
 
-void Tabla_puertoA(int a){                              // Colocar variable que incrementa por boton de J1
+
+//------------------------Subrutinas------------------------------
+void Tabla_puertoA(int a){                                  // Colocar variable que incrementa por boton de J1
   switch(a){
     case 1:                                                 // Si botón J1 = 1, PORTA_0 = 1
       digitalWrite(PORTA_0, HIGH);
@@ -199,7 +232,7 @@ void Tabla_puertoA(int a){                              // Colocar variable que 
   }
 }
 
-void Tabla_puertoB(int b){                              // Colocar variable que incrementa por boton de J1
+void Tabla_puertoB(int b){                                  // Colocar variable que incrementa por boton de J1
   switch(b){
     case 1:                                                 // Si botón J2 = 1, PORTB_0 = 1
       digitalWrite(PORTB_0, HIGH);

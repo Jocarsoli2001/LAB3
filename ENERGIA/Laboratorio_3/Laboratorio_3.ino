@@ -5,8 +5,8 @@
 #define RESET PF_4                                          // Pushbutton 2 (sw2) tiene la función de reiniciar la carrera
 
 // Botones para jugador 1 y 2
-#define J1 PB_2                                             // Botón para jugador 1 en pin PB0    
-#define J2 PE_0                                             // Botón para jugador 2 en pin PB1
+#define J1 PA_3                                             // Botón para jugador 1 en pin PB0    
+#define J2 PA_2                                             // Botón para jugador 2 en pin PB1
 
 // Pines para LED RGB integrada
 #define LED_verde PF_3                                      // Definición de pin para prender color verde en LED RGB integrada
@@ -30,7 +30,7 @@
 #define PORTB_4 PE_1
 #define PORTB_5 PE_2
 #define PORTB_6 PE_3
-#define PORTB_7 PF_1
+#define PORTB_7 PB_3
 
 //---------------Declaración de variables-------------------
 int Estado_START = 0;
@@ -41,9 +41,11 @@ int Estado_RESET = 0;
 int Bandera_inicio = 0;
 int PORTA = 0;
 int PORTB = 0;
+int presionado = 0;
   
 void setup() {
-  
+
+  Serial.begin(9600);
   // Declaraciones de entradas y salidas
   pinMode(START, INPUT_PULLUP);                             // Botón para start como INPUT
   pinMode(RESET, INPUT_PULLUP);                             // Botón para stop como INPUT
@@ -96,27 +98,65 @@ void loop() {
 
     digitalWrite(LED_rojo, LOW);                            // Asignar LED_rojo como 0 (Amarillo)
     Bandera_inicio = 1;                                     // Utilizar Bandera_inicio para indicar que la carrera ya puede iniciar
+    delay(500);
   }
 
   // Reinicio de todo si se preciona el botón de RESET
-  else if(Estado_START == LOW && Estado_RESET == HIGH){     // Si se presiona el botón de RESET, entonces:
+  if(Estado_START == LOW && Estado_RESET == HIGH){          // Si se presiona el botón de RESET, entonces:
     digitalWrite(LED_rojo, LOW);                            // Apagar LED_rojo
     digitalWrite(LED_verde, LOW);                           // Apagar LED_verde
     digitalWrite(LED_azul, LOW);                            // Apagar LED_azul
+    
+    digitalWrite(PORTA_0, LOW);                             // Apagar pin 0 de puerto A
+    digitalWrite(PORTA_1, LOW);                             // Apagar pin 1 de puerto A
+    digitalWrite(PORTA_2, LOW);                             // Apagar pin 2 de puerto A
+    digitalWrite(PORTA_3, LOW);                             // Apagar pin 3 de puerto A
+    digitalWrite(PORTA_4, LOW);                             // Apagar pin 4 de puerto A
+    digitalWrite(PORTA_5, LOW);                             // Apagar pin 5 de puerto A
+    digitalWrite(PORTA_6, LOW);                             // Apagar pin 6 de puerto A
+    digitalWrite(PORTA_7, LOW);                             // Apagar pin 7 de puerto A
+
+    digitalWrite(PORTB_0, LOW);                             // Apagar pin 0 de puerto B
+    digitalWrite(PORTB_1, LOW);                             // Apagar pin 1 de puerto B
+    digitalWrite(PORTB_2, LOW);                             // Apagar pin 2 de puerto B
+    digitalWrite(PORTB_3, LOW);                             // Apagar pin 3 de puerto B
+    digitalWrite(PORTB_4, LOW);                             // Apagar pin 4 de puerto B
+    digitalWrite(PORTB_5, LOW);                             // Apagar pin 5 de puerto B
+    digitalWrite(PORTB_6, LOW);                             // Apagar pin 6 de puerto B
+    digitalWrite(PORTB_7, LOW);                             // Apagar pin 7 de puerto B
+    
     Bandera_inicio = 0;                                     // Reiniciar bandera que indica el poder reiniciar la carrera
+    PORTA = 0;
+    PORTB = 0;
   }
 
-  // Pista de carrera
   if(Bandera_inicio == 1){
-    if(Estado_J1 == HIGH){
-      PORTA++;
-      Tabla_puertoA(PORTA);
-    }
-    if(Estado_J2 == HIGH){
-      PORTB++;
-      Tabla_puertoB(PORTB);
-    }
+      if(Estado_J1 == LOW)                            //Pregunta si el pulsador está presionado
+      {
+        presionado = 1;                                     //La variable cambia de valor
+      }
+      if (Estado_J1 == LOW && presionado == 1)
+      {
+        Serial.println("J1");
+        PORTA++;
+        Tabla_puertoA(PORTA);
+        delay(500);
+      }
+
+      if(Estado_J2 == LOW)                            //Pregunta si el pulsador está presionado
+      {
+        presionado = 1;                                     //La variable cambia de valor
+      }
+      if (Estado_J2 == LOW && presionado == 1)
+      {
+        Serial.println("J2");
+        PORTB++;
+        Tabla_puertoB(PORTB);
+        delay(500);
+      }
   }
+  
+  
 }
 
 void Tabla_puertoA(int a){                              // Colocar variable que incrementa por boton de J1
